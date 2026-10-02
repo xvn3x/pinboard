@@ -1,0 +1,58 @@
+// Run against a started local app; isolated headless browser, no user profile.
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+(async () => {
+  const root = path.resolve(__dirname,'..');
+  const session = JSON.parse(fs.readFileSync(path.join(process.env.PINBOARD_TEST_HOME || root,'.pinboard/session.json'),'utf8'));
+  const out = path.join(root,'test-artifacts'); fs.mkdirSync(out,{recursive:true});
+  const browser = await chromium.launch({executablePath:process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+  try {
+    const page = await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(session.url);
+    await page.locator('.board-card').first().waitFor();
+    assert.equal(await page.locator('.hero,.sidebar-note,.panel-heading,.page-heading').count(),0);
+    await page.screenshot({path:path.join(out,'pinboard-desktop.png'),fullPage:true});
+    await page.getByRole('button',{name:'Параметры'}).click();
+    await page.selectOption('#limit-mode','custom');
+    assert(await page.locator('#limit').isVisible());
+    await page.fill('#board-url','https://pinterest.com/pin/123/');
+    assert(await page.locator('#limit').isDisabled());
+    assert(!(await page.locator('#limit-mode-label').isVisible()));
+    await page.fill('#board-url','https://pinterest.com/example/board/');
+    assert(await page.locator('#limit').isVisible());
+    await page.fill('#board-url','https://example.com/user/board/');
+    await page.locator('#download-button').click();
+    await page.locator('#form-error').waitFor({state:'visible'});
+    assert((await page.locator('#form-error').textContent()).includes('Pinterest'));
+    await page.locator('[data-view="library"]').click();
+    await page.fill('#search','несуществующая доска zzzz');
+    assert(await page.getByText('Ничего не найдено').isVisible());
+    await page.fill('#search','');
+    await page.locator('#all-board-grid .board-card').first().click();
+    await page.locator('#media-grid .media-item').first().waitFor();
+    const images=await page.locator('#media-grid img').evaluateAll(images=>images.map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth})));
+    await page.screenshot({path:path.join(out,'pinboard-library.png'),fullPage:true});
+    await page.keyboard.press('Escape');
+    await page.locator('[data-view="settings"]').click();
+    assert((await page.inputValue('#output-path')).includes('downloads'));
+    await page.screenshot({path:path.join(out,'pinboard-settings.png'),fullPage:true});
+    await page.locator('[data-view="home"]').click();
+    await page.getByRole('button',{name:'Как это работает'}).click();
+    assert(await page.locator('#help-dialog').isVisible());
+    assert((await page.locator('#help-dialog').textContent()).includes('доску или отдельный пин'));
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Параметры'}).click();
+    await page.fill('#board-url','');
+    await page.setViewportSize({width:800,height:900});
+    assert(!(await page.locator('.brand>span').isVisible()));
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Tablet horizontal overflow');
+    await page.setViewportSize({width:390,height:844});
+    await page.screenshot({path:path.join(out,'pinboard-mobile.png'),fullPage:true});
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Mobile horizontal overflow');
+    assert.deepEqual(errors,[]);
+    console.log(JSON.stringify({status:'PASS',checks:['desktop','library preview','invalid URL','limit controls','search','settings','help','mobile overflow','no JS errors'],images:images.length},null,2));
+  } finally { await browser.close(); }
+})().catch(error=>{console.error(error);process.exitCode=1;});

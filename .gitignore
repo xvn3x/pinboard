@@ -1,0 +1,14 @@
+.venv/
+.runtime/
+__pycache__/
+*.pyc
+.pinboard/
+downloads/
+build/
+dist/
+release/
+build-assets/
+*.spec
+*.exe
+worker-check.log
+test-artifacts/

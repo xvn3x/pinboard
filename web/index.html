@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Pinboard</title><link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="#" aria-label="Pinboard — главная"><img src="/icon.svg" alt=""><span>pinboard<span class="brand-dot">.</span></span></a>
+  <nav aria-label="Основная навигация">
+    <button class="nav-item active" data-view="home" aria-label="Скачать"><i data-icon="download"></i>Скачать</button>
+    <button class="nav-item" data-view="library" aria-label="Библиотека"><i data-icon="grid"></i>Библиотека<span id="nav-count" class="count">0</span></button>
+    <button class="nav-item" data-view="settings" aria-label="Настройки"><i data-icon="settings"></i>Настройки</button>
+  </nav>
+  <div class="sidebar-bottom"><span id="version">1.1.0</span><button id="quit" title="Завершить работу" aria-label="Завершить работу"><i data-icon="power"></i></button></div>
+</aside>
+<main>
+  <header class="topbar"><h1 id="breadcrumb">Скачать</h1><button class="help-button" id="help"><i data-icon="help"></i>Как это работает</button></header>
+  <section id="home-view" class="view">
+    <section class="download-panel" aria-label="Загрузка из Pinterest">
+      <form id="download-form"><label class="sr-only" for="board-url">Ссылка на доску или пин Pinterest</label><div class="url-row"><div class="url-input"><input id="board-url" type="text" inputmode="url" autocomplete="off" placeholder="Ссылка на доску или пин Pinterest" required><button id="paste" type="button" title="Вставить из буфера" aria-label="Вставить ссылку"><i data-icon="clipboard"></i></button></div><button class="primary" id="download-button" type="submit"><i data-icon="download"></i>Скачать</button></div><p id="form-error" class="error" role="alert" hidden></p>
+      <div class="form-bottom"><button id="options-toggle" type="button" aria-expanded="false" aria-controls="download-options"><i data-icon="sliders"></i>Параметры<span id="options-chevron">⌄</span></button></div>
+      <div id="download-options" class="download-options" hidden><label id="limit-mode-label">Лимит для доски<select id="limit-mode"><option value="all">Без лимита</option><option value="custom">Указать лимит</option></select></label><label id="limit-label" hidden>Файлов<input id="limit" type="number" value="20" min="1" max="100000"></label><label>Вход через браузер<select id="browser"><option value="">Без входа</option><option value="edge">Microsoft Edge</option><option value="chrome">Google Chrome</option><option value="firefox">Firefox</option></select></label><label class="check-label"><input id="make-zip" type="checkbox" checked><span>Создать ZIP-архив</span></label></div></form>
+    </section>
+    <section id="job-panel" class="job-panel" aria-live="polite" hidden><div class="job-top"><div><span id="job-status" class="eyebrow">ЗАГРУЗКА</span><h3 id="job-name"></h3></div><div class="job-actions"><button id="job-open" class="secondary" hidden><i data-icon="folder"></i>Открыть папку</button><button id="job-stop" class="secondary">Остановить</button></div></div><div id="job-progress" class="progress indeterminate"><span></span></div><div class="job-info"><p id="job-message"></p><strong id="job-stats"></strong></div><details><summary>Журнал загрузки</summary><pre id="job-log"></pre></details></section>
+    <section class="library-section"><div class="section-heading"><div><h2>Сохранённое <span id="recent-count" class="heading-count">0</span></h2></div><button class="text-button" id="all-boards">Вся библиотека <span>↗</span></button></div><div id="recent-boards" class="board-grid"></div></section>
+  </section>
+  <section id="library-view" class="view" hidden><div class="library-toolbar"><div class="search-box"><i data-icon="search"></i><input id="search" placeholder="Поиск…" aria-label="Поиск по библиотеке"></div><select id="sort" aria-label="Сортировка"><option value="recent">Сначала новые</option><option value="name">По названию</option><option value="count">По количеству файлов</option></select><button id="library-folder" class="secondary"><i data-icon="folder"></i>Папка загрузок</button></div><div id="library-summary" class="library-summary"></div><div id="all-board-grid" class="board-grid"></div></section>
+  <section id="settings-view" class="view" hidden><section class="settings-card"><form id="settings-form"><label for="output-path">Папка загрузок</label><input id="output-path" required><div class="settings-actions"><button type="submit" class="primary">Сохранить</button><button type="button" class="secondary" id="settings-folder">Открыть папку</button></div><p id="settings-message" role="status"></p></form></section></section>
+</main>
+<dialog id="board-dialog"><div class="dialog-header"><div><span class="eyebrow" id="board-owner"></span><h2 id="board-title"></h2><p id="board-details"></p></div><button class="icon-button close-dialog" aria-label="Закрыть"><i data-icon="close"></i></button></div><div class="dialog-actions"><button id="board-folder" class="secondary"><i data-icon="folder"></i>Открыть папку</button><a id="board-zip" class="secondary" hidden><i data-icon="download"></i>Скачать ZIP</a></div><div id="media-grid" class="media-grid"></div><button id="load-more" class="secondary" hidden>Показать ещё</button></dialog>
+<dialog id="help-dialog"><div class="dialog-header"><h2>Как это работает</h2><button class="icon-button close-dialog" aria-label="Закрыть"><i data-icon="close"></i></button></div>
+<ol class="help-steps">
+<li><b>Скопируйте ссылку на доску или отдельный пин</b><p>Подходят ссылки Pinterest и короткие ссылки pin.it из меню «Поделиться».</p></li>
+<li><b>Вставьте ссылку и нажмите «Скачать»</b><p>В параметрах можно включить ZIP-архив и ограничить число файлов доски. Отдельный пин скачивается со всеми доступными файлами.</p></li>
+<li><b>Откройте файлы в библиотеке или папке</b><p>Папку загрузок можно изменить в настройках. При повторной загрузке уже сохранённые файлы пропускаются.</p></li>
+</ol>
+<p class="help-tip">Если Pinterest требует вход, выберите в параметрах браузер с вашей сессией Pinterest. Если сессия не читается, закройте этот браузер и повторите загрузку.</p>
+<p class="help-footnote">Закрытие вкладки не останавливает приложение. Для выхода нажмите кнопку питания в меню. Для скачивания нужен интернет; сохранённые файлы доступны без него. Pinboard не связан с Pinterest.</p></dialog>
+<div id="toast" role="status" hidden></div>
+</body></html>
